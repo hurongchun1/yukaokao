@@ -29,32 +29,32 @@ public class ScoringResultQueryRequest extends PageRequest implements Serializab
     /**
      * 结果名称，如物流师
      */
-    private String resultname;
+    private String resultName;
 
     /**
      * 结果描述
      */
-    private String resultdesc;
+    private String resultDesc;
 
     /**
      * 结果图片
      */
-    private String resultpicture;
+    private String resultpPicture;
 
     /**
      * 结果属性集合 JSON，如 [I,S,T,J]
      */
-    private String resultprop;
+    private String resultpProp;
 
     /**
      * 结果得分范围，如 80，表示 80及以上的分数命中此结果
      */
-    private Integer resultscorerange;
+    private Integer resultScoreRange;
 
     /**
      * 应用 id
      */
-    private Long appid;
+    private Long appId;
 
     /**
      * 创建用户 id

@@ -56,26 +56,14 @@ public class UserAnswerServiceImpl extends ServiceImpl<UserAnswerMapper, UserAns
     public void validUserAnswer(UserAnswer userAnswer, boolean add) {
         ThrowUtils.throwIf(userAnswer == null, ErrorCode.PARAMS_ERROR);
         //  从对象中取值
-        Long appId = userAnswer.getAppid();
-        Integer appType = userAnswer.getApptype();
-        Integer scoringStrategy = userAnswer.getScoringstrategy();
-        String resultName = userAnswer.getResultname();
-        String resultDesc = userAnswer.getResultdesc();
-        String resultPicture = userAnswer.getResultpicture();
-        Integer resultScore = userAnswer.getResultscore();
+        Long appId = userAnswer.getAppId();
+        String resultName = userAnswer.getResultName();
+        String resultDesc = userAnswer.getResultDesc();
 
 
         // 创建数据时，参数不能为空
         if (add) {
             //  补充校验规则
-            ApplyTypeEnum applyTypeEnum = ApplyTypeEnum.getEnumByValue(appType);
-            ThrowUtils.throwIf(applyTypeEnum == null, ErrorCode.PARAMS_ERROR, "应用类型 非法");
-            AppScoringStrategyEnum scoringStrategyEnum = AppScoringStrategyEnum.getEnumByValue(scoringStrategy);
-            ThrowUtils.throwIf(scoringStrategyEnum == null, ErrorCode.PARAMS_ERROR, "评分策略 非法");
-            ThrowUtils.throwIf(StrUtil.isEmptyIfStr(resultName), ErrorCode.PARAMS_ERROR, "结果名称 非法");
-            ThrowUtils.throwIf(StrUtil.isEmptyIfStr(resultDesc), ErrorCode.PARAMS_ERROR, "结果描述 非法");
-            ThrowUtils.throwIf(StrUtil.isEmptyIfStr(resultPicture), ErrorCode.PARAMS_ERROR, "结果图片 非法");
-            ThrowUtils.throwIf(resultScore == null || resultScore < 0, ErrorCode.PARAMS_ERROR, "结果分数 非法");
             ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用id 非法");
         }
         // 修改数据时，有参数则校验
@@ -108,15 +96,15 @@ public class UserAnswerServiceImpl extends ServiceImpl<UserAnswerMapper, UserAns
         }
         //  从对象中取值
         Long id = userAnswerQueryRequest.getId();
-        Long appid = userAnswerQueryRequest.getAppid();
-        Integer appType = userAnswerQueryRequest.getApptype();
-        Integer scoringStrategy = userAnswerQueryRequest.getScoringstrategy();
+        Long appid = userAnswerQueryRequest.getAppId();
+        Integer appType = userAnswerQueryRequest.getAppType();
+        Integer scoringStrategy = userAnswerQueryRequest.getScoringStrategy();
         List<String> choices = userAnswerQueryRequest.getChoices();
-        Long resultId = userAnswerQueryRequest.getResultid();
-        String resultName = userAnswerQueryRequest.getResultname();
-        String resultDesc = userAnswerQueryRequest.getResultdesc();
-        String resultPicture = userAnswerQueryRequest.getResultpicture();
-        Integer resultScore = userAnswerQueryRequest.getResultscore();
+        Long resultId = userAnswerQueryRequest.getResultId();
+        String resultName = userAnswerQueryRequest.getResultName();
+        String resultDesc = userAnswerQueryRequest.getResultDesc();
+        String resultPicture = userAnswerQueryRequest.getResultPicture();
+        Integer resultScore = userAnswerQueryRequest.getResultScore();
         Long userid = userAnswerQueryRequest.getUserid();
         String searchText = userAnswerQueryRequest.getSearchText();
         String sortField = userAnswerQueryRequest.getSortField();

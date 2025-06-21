@@ -22,7 +22,7 @@ public class QuestionAddRequest implements Serializable {
     /**
      * 题目内容（json格式），对应可以多道题目的
      */
-    private List<QuestionContentDTO> questioncontent;
+    private List<QuestionContentDTO> questionContent;
 
     /**
      * 应用 id

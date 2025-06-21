@@ -26,9 +26,13 @@ public class QuestionContentDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Option {
+        //结果
         private String result;
+        //分数
         private int score;
+        //答案
         private String value;
+        //题目的选项
         private String key;
     }
 }

@@ -25,47 +25,47 @@ public class AppUpdateRequest implements Serializable {
     /**
      * 应用名
      */
-    private String appname;
+    private String appName;
 
     /**
      * 应用描述
      */
-    private String appdesc;
+    private String appDesc;
 
     /**
      * 应用图标
      */
-    private String appicon;
+    private String appIcon;
 
     /**
      * 应用类型（0-得分类，1-测评类）
      */
-    private Integer apptype;
+    private Integer appType;
 
     /**
      * 评分策略（0-自定义，1-AI）
      */
-    private Integer scoringstrategy;
+    private Integer scoringStrategy;
 
     /**
      * 审核状态：0-待审核, 1-通过, 2-拒绝
      */
-    private Integer reviewstatus;
+    private Integer reviewStatus;
 
     /**
      * 审核信息
      */
-    private String reviewmessage;
+    private String reviewMessage;
 
     /**
      * 审核人 id
      */
-    private Long reviewerid;
+    private Long reviewerId;
 
     /**
      * 审核时间
      */
-    private Date reviewtime;
+    private Date reviewTime;
 
     private static final long serialVersionUID = 1L;
 }

@@ -14,9 +14,13 @@ import com.hrc.yukaokao.model.dto.userAnswerRequest.UserAnswerAddRequest;
 import com.hrc.yukaokao.model.dto.userAnswerRequest.UserAnswerEditRequest;
 import com.hrc.yukaokao.model.dto.userAnswerRequest.UserAnswerQueryRequest;
 import com.hrc.yukaokao.model.dto.userAnswerRequest.UserAnswerUpdateRequest;
+import com.hrc.yukaokao.model.entity.App;
 import com.hrc.yukaokao.model.entity.UserAnswer;
 import com.hrc.yukaokao.model.entity.User;
+import com.hrc.yukaokao.model.enums.ReviewStatusEnum;
 import com.hrc.yukaokao.model.vo.UserAnswerVO;
+import com.hrc.yukaokao.scoring.ScoringStrategyExecutor;
+import com.hrc.yukaokao.service.AppService;
 import com.hrc.yukaokao.service.UserAnswerService;
 import com.hrc.yukaokao.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -44,10 +48,16 @@ public class UserAnswerController {
     @Resource
     private UserService userService;
 
+    @Resource
+    private ScoringStrategyExecutor scoringStrategyExecutor;
+
+    @Resource
+    private AppService appService;
+
     // region 增删改查
 
     /**
-     * 创建用户答题记录表
+     * 创建用户答题记录表，答题功能
      *
      * @param userAnswerAddRequest
      * @param request
@@ -63,6 +73,11 @@ public class UserAnswerController {
         userAnswer.setChoices(JSONUtil.toJsonStr(choices));
         // 数据校验
         userAnswerService.validUserAnswer(userAnswer, true);
+        Long appId = userAnswerAddRequest.getAppId();
+        App app = appService.getById(appId);
+        //如果审核不通过的 应用不允许答题
+        ThrowUtils.throwIf(ReviewStatusEnum.PASS !=
+                ReviewStatusEnum.getEnumByValue(app.getReviewStatus()),ErrorCode.NO_AUTH_ERROR,"应用审核未通过，不允许答题");
         //  填充默认值
         User loginUser = userService.getLoginUser(request);
         userAnswer.setUserid(loginUser.getId());
@@ -71,6 +86,15 @@ public class UserAnswerController {
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         // 返回新写入的数据 id
         long newUserAnswerId = userAnswer.getId();
+        //调用评分模块
+        try {
+            UserAnswer userAnswerWithResult = scoringStrategyExecutor.doScore(choices, app);
+            userAnswerWithResult.setId(newUserAnswerId);
+            userAnswerService.updateById(userAnswerWithResult);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"评分失败");
+        }
         return ResultUtils.success(newUserAnswerId);
     }
 

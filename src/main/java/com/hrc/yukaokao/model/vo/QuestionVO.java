@@ -30,12 +30,12 @@ public class QuestionVO implements Serializable {
     /**
      * 题目内容（json格式）
      */
-    private List<QuestionContentDTO> questioncontent;
+    private List<QuestionContentDTO> questionContent;
 
     /**
      * 应用 id
      */
-    private Long appid;
+    private Long appId;
 
     /**
      * 创建用户 id
@@ -45,12 +45,12 @@ public class QuestionVO implements Serializable {
     /**
      * 创建时间
      */
-    private Date createtime;
+    private Date createTime;
 
     /**
      * 更新时间
      */
-    private Date updatetime;
+    private Date updateTime;
 
     /**
      * 创建用户信息
@@ -69,8 +69,8 @@ public class QuestionVO implements Serializable {
         }
         Question question = new Question();
         BeanUtils.copyProperties(questionVO, question);
-        List<QuestionContentDTO> questionContentDTO = questionVO.getQuestioncontent();
-        question.setQuestioncontent(JSONUtil.toJsonStr(questionContentDTO));
+        List<QuestionContentDTO> questionContentDTO = questionVO.getQuestionContent();
+        question.setQuestionContent(JSONUtil.toJsonStr(questionContentDTO));
         return question;
     }
 
@@ -86,9 +86,9 @@ public class QuestionVO implements Serializable {
         }
         QuestionVO questionVO = new QuestionVO();
         BeanUtils.copyProperties(question, questionVO);
-        String questioncontent = question.getQuestioncontent();
+        String questioncontent = question.getQuestionContent();
         if(StrUtil.isNotBlank(questioncontent) ){
-            questionVO.setQuestioncontent(JSONUtil.toList(questioncontent, QuestionContentDTO.class));
+            questionVO.setQuestionContent(JSONUtil.toList(questioncontent, QuestionContentDTO.class));
         }
         return questionVO;
     }

@@ -28,32 +28,32 @@ public class ScoringResultVO implements Serializable {
     /**
      * 结果名称，如物流师
      */
-    private String resultname;
+    private String resultName;
 
     /**
      * 结果描述
      */
-    private String resultdesc;
+    private String resultDesc;
 
     /**
      * 结果图片
      */
-    private String resultpicture;
+    private String resultPicture;
 
     /**
      * 结果属性集合 JSON，如 [I,S,T,J]
      */
-    private List<String> resultprop;
+    private List<String> resultProp;
 
     /**
      * 结果得分范围，如 80，表示 80及以上的分数命中此结果
      */
-    private Integer resultscorerange;
+    private Integer resultScoreRange;
 
     /**
      * 应用 id
      */
-    private Long appid;
+    private Long appId;
 
     /**
      * 创建用户 id
@@ -63,12 +63,12 @@ public class ScoringResultVO implements Serializable {
     /**
      * 创建时间
      */
-    private Date createtime;
+    private Date createTime;
 
     /**
      * 更新时间
      */
-    private Date updatetime;
+    private Date updateTime;
 
     /**
      * 创建用户信息
@@ -87,8 +87,8 @@ public class ScoringResultVO implements Serializable {
         }
         ScoringResult scoringResult = new ScoringResult();
         BeanUtils.copyProperties(scoringResultVO, scoringResult);
-        List<String> resultProp = scoringResultVO.getResultprop();
-        scoringResult.setResultprop(JSONUtil.toJsonStr(resultProp));
+        List<String> resultProp = scoringResultVO.getResultProp();
+        scoringResult.setResultProp(JSONUtil.toJsonStr(resultProp));
         return scoringResult;
     }
 
@@ -104,7 +104,7 @@ public class ScoringResultVO implements Serializable {
         }
         ScoringResultVO scoringResultVO = new ScoringResultVO();
         BeanUtils.copyProperties(scoringResult, scoringResultVO);
-        scoringResultVO.setResultprop(JSONUtil.toList(scoringResult.getResultprop(), String.class));
+        scoringResultVO.setResultProp(JSONUtil.toList(scoringResult.getResultProp(), String.class));
         return scoringResultVO;
     }
 }

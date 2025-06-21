@@ -55,9 +55,9 @@ public class ScoringResultServiceImpl extends ServiceImpl<ScoringResultMapper, S
     public void validScoringResult(ScoringResult scoringResult, boolean add) {
         ThrowUtils.throwIf(scoringResult == null, ErrorCode.PARAMS_ERROR);
         // 从对象中取值
-        String resultName = scoringResult.getResultname();
-        String resultDesc = scoringResult.getResultdesc();
-        Long appId = scoringResult.getAppid();
+        String resultName = scoringResult.getResultName();
+        String resultDesc = scoringResult.getResultDesc();
+        Long appId = scoringResult.getAppId();
 
         // 创建数据时，参数不能为空
         if (add) {
@@ -91,12 +91,12 @@ public class ScoringResultServiceImpl extends ServiceImpl<ScoringResultMapper, S
         }
         // 从对象中取值
         Long id = scoringResultQueryRequest.getId();
-        String resultName = scoringResultQueryRequest.getResultname();
-        String resultDesc = scoringResultQueryRequest.getResultdesc();
-        String resultPicture = scoringResultQueryRequest.getResultpicture();
-        String resultProp = scoringResultQueryRequest.getResultprop();
-        Integer resultScoreRange = scoringResultQueryRequest.getResultscorerange();
-        Long appid = scoringResultQueryRequest.getAppid();
+        String resultName = scoringResultQueryRequest.getResultName();
+        String resultDesc = scoringResultQueryRequest.getResultDesc();
+        String resultPicture = scoringResultQueryRequest.getResultpPicture();
+        String resultProp = scoringResultQueryRequest.getResultpProp();
+        Integer resultScoreRange = scoringResultQueryRequest.getResultScoreRange();
+        Long appid = scoringResultQueryRequest.getAppId();
         Long userid = scoringResultQueryRequest.getUserid();
         String searchText = scoringResultQueryRequest.getSearchText();
 

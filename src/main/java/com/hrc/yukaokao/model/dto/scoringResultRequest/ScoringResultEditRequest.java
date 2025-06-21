@@ -25,27 +25,27 @@ public class ScoringResultEditRequest implements Serializable {
     /**
      * 结果名称，如物流师
      */
-    private String resultname;
+    private String resultName;
 
     /**
      * 结果描述
      */
-    private String resultdesc;
+    private String resultDesc;
 
     /**
      * 结果图片
      */
-    private String resultpicture;
+    private String resultPicture;
 
     /**
      * 结果属性集合 JSON，如 [I,S,T,J]
      */
-    private List<String> resultprop;
+    private List<String> resultProp;
 
     /**
      * 结果得分范围，如 80，表示 80及以上的分数命中此结果
      */
-    private Integer resultscorerange;
+    private Integer resultScoreRange;
 
 
     private static final long serialVersionUID = 1L;

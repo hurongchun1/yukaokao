@@ -13,6 +13,7 @@ import com.hrc.yukaokao.model.dto.appRequest.AppQueryRequest;
 import com.hrc.yukaokao.model.dto.appRequest.AppUpdateRequest;
 import com.hrc.yukaokao.model.entity.App;
 import com.hrc.yukaokao.model.entity.User;
+import com.hrc.yukaokao.model.enums.ReviewStatusEnum;
 import com.hrc.yukaokao.model.vo.AppVO;
 import com.hrc.yukaokao.service.AppService;
 import com.hrc.yukaokao.service.UserService;
@@ -170,6 +171,8 @@ public class AppController {
         long size = appQueryRequest.getPageSize();
         // 限制爬虫
         ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
+        //这里普通用户只能查看过审核的应用
+        appQueryRequest.setReviewstatus(ReviewStatusEnum.PASS.getValue());
         // 查询数据库
         Page<App> appPage = appService.page(new Page<>(current, size),
                 appService.getQueryWrapper(appQueryRequest));
@@ -243,6 +246,7 @@ public class AppController {
      * @return
      */
     @AuthCheck
+    @PostMapping("doAppReview")
     public BaseResponse<Boolean> doAppReview(@RequestBody ReviewRequest reviewRequest,HttpServletRequest request) {
         //校验参数是否为空
         ThrowUtils.throwIf(reviewRequest== null, ErrorCode.PARAMS_ERROR);
@@ -256,15 +260,16 @@ public class AppController {
         App oldApp = appService.getById(id);
         ThrowUtils.throwIf(oldApp == null, ErrorCode.NOT_FOUND_ERROR);
         //判断是否已经审核过了
-        ThrowUtils.throwIf(oldApp.getReviewstatus() != 0, ErrorCode.PARAMS_ERROR,"请勿重复审核");
+        ThrowUtils.throwIf(oldApp.getReviewStatus() > 1 , ErrorCode.PARAMS_ERROR,"请勿重复审核");
         //更新审核状态
         User loginUser = userService.getLoginUser(request);
         ThrowUtils.throwIf(loginUser == null, ErrorCode.NOT_LOGIN_ERROR);
         App app = new App();
         app.setId(id);
-        app.setReviewstatus(reviewStatus);
-        app.setReviewerid(loginUser.getId());
-        app.setReviewtime(new Date());
+        app.setReviewStatus(reviewStatus);
+        app.setReviewMessage(reviewRequest.getReviewMessage());
+        app.setReviewerId(loginUser.getId());
+        app.setReviewTime(new Date());
         boolean result = appService.updateById(app);
         ThrowUtils.throwIf(!result,ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);

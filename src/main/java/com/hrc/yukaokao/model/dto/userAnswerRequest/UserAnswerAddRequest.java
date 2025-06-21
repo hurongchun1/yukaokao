@@ -20,7 +20,7 @@ public class UserAnswerAddRequest implements Serializable {
     /**
      * 应用 id
      */
-    private Long appid;
+    private Long appId;
 
     /**
      * 用户答案（JSON 数组）

@@ -56,11 +56,11 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
     public void validApp(App app, boolean add) {
         ThrowUtils.throwIf(app == null, ErrorCode.PARAMS_ERROR);
         // todo 从对象中取值
-        String appName = app.getAppname();
-        String appDesc = app.getAppdesc();
-        Integer appType = app.getApptype();
-        Integer scoringStrategy = app.getScoringstrategy();
-        Integer reviewStatus = app.getReviewstatus();
+        String appName = app.getAppName();
+        String appDesc = app.getAppDesc();
+        Integer appType = app.getAppType();
+        Integer scoringStrategy = app.getScoringStrategy();
+        Integer reviewStatus = app.getReviewStatus();
 
 
         // 创建数据时，参数不能为空，说明是添加方法
@@ -103,11 +103,11 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         }
         //  从对象中取值
         Long id = appQueryRequest.getId();
-        String appName = appQueryRequest.getAppname();
-        String appDesc = appQueryRequest.getAppdesc();
-        String appIcon = appQueryRequest.getAppicon();
-        Integer appType = appQueryRequest.getApptype();
-        Integer scoringStrategy = appQueryRequest.getScoringstrategy();
+        String appName = appQueryRequest.getAppName();
+        String appDesc = appQueryRequest.getAppDesc();
+        String appIcon = appQueryRequest.getAppIcon();
+        Integer appType = appQueryRequest.getAppType();
+        Integer scoringStrategy = appQueryRequest.getScoringStrategy();
         Integer reviewStatus = appQueryRequest.getReviewstatus();
         String reviewMessage = appQueryRequest.getReviewmessage();
         Long reviewerId = appQueryRequest.getReviewerid();

@@ -56,8 +56,8 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
     public void validQuestion(Question question, boolean add) {
         ThrowUtils.throwIf(question == null, ErrorCode.PARAMS_ERROR);
         // todo 从对象中取值
-        String questionContent = question.getQuestioncontent();
-        Long appId = question.getAppid();
+        String questionContent = question.getQuestionContent();
+        Long appId = question.getAppId();
 
 
         // 创建数据时，参数不能为空
@@ -89,7 +89,7 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
         }
         //  从对象中取值
         Long id = questionQueryRequest.getId();
-        List<QuestionContentDTO> questionContent = questionQueryRequest.getQuestioncontent();
+        List<QuestionContentDTO> questionContent = questionQueryRequest.getQuestionContent();
         String userid = questionQueryRequest.getUserid();
         String sortField = questionQueryRequest.getSortField();
         String sortOrder = questionQueryRequest.getSortOrder();
