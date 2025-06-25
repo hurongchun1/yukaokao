@@ -16,6 +16,10 @@ import java.util.List;
  */
 @Data
 public class UserAnswerAddRequest implements Serializable {
+    /**
+     * 用户答题记录id
+     */
+    private Long id;
 
     /**
      * 应用 id

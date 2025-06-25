@@ -8,6 +8,7 @@ import com.hrc.yukaokao.common.BaseResponse;
 import com.hrc.yukaokao.common.DeleteRequest;
 import com.hrc.yukaokao.common.ErrorCode;
 import com.hrc.yukaokao.common.ResultUtils;
+import com.hrc.yukaokao.config.VipSchedulerConfig;
 import com.hrc.yukaokao.constant.UserConstant;
 import com.hrc.yukaokao.exception.BusinessException;
 import com.hrc.yukaokao.exception.ThrowUtils;
@@ -25,6 +26,7 @@ import com.hrc.yukaokao.service.QuestionService;
 import com.hrc.yukaokao.service.UserService;
 import com.zhipu.oapi.service.v4.model.ModelData;
 import io.reactivex.Flowable;
+import io.reactivex.Scheduler;
 import io.reactivex.schedulers.Schedulers;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -60,6 +62,9 @@ public class QuestionController {
     private AppService appService;
     @Resource
     private AiManager aiManager;
+
+    @Resource
+    private VipSchedulerConfig vipSchedulerConfig;
     // region 增删改查
 
     /**
@@ -307,7 +312,7 @@ public class QuestionController {
 
     @GetMapping("/api_generate/sse")
     public SseEmitter aiGenerateStreamQuestion(
-            AiGenerateQuestionRequest aiGenerateQuestionRequest){
+            AiGenerateQuestionRequest aiGenerateQuestionRequest,HttpServletRequest request){
         //判断请求参数是否为空
         ThrowUtils.throwIf(aiGenerateQuestionRequest == null ,ErrorCode.PARAMS_ERROR);
         //获取请求参数中的appId
@@ -332,10 +337,17 @@ public class QuestionController {
         StringBuffer stringBuffer =  new StringBuffer();
         // 左括号计数器，除了默认值外，当回归为0 时，表示左括号等于右括号，可以截取
         AtomicInteger counter = new AtomicInteger();
+        //生成线程工厂方式
+        Scheduler scheduler = Schedulers.io();
+        User loginUser = userService.getLoginUser(request);
+        if("admin".equals(loginUser.getUserRole())){
+            //vip用户提供定制的线程池
+            scheduler = vipSchedulerConfig.vipScheduler();
+        }
         //需要将那些多余的空格排除
         modelDataFlowable
                 //数据流订阅和调度，表示将后续的操作在IO 调度器上执行，适用于 I/O密集型任务
-                .observeOn(Schedulers.io())
+                .observeOn(scheduler)
                 //数据映射与处理
                 //获取到流式的数据
                 .map(chunk -> chunk.getChoices().get(0).getDelta().getContent())
@@ -366,6 +378,99 @@ public class QuestionController {
                     if(c == '}'){
                         counter.addAndGet(-1);
                         if(counter.get() == 0){
+                            //积累单套题目满足 json 格式后，sse推动至前端
+                            //sse 需要压缩成当行 json，sse 无法识别换行
+                            sseEmitter.send(JSONUtil.toJsonStr(stringBuffer.toString()));
+                            //清空 stringBuffer
+                            stringBuffer.setLength(0);
+                        }
+                    }
+
+                })
+                .doOnError(e -> log.error(e.toString()))
+                .doOnComplete(() -> sseEmitter.complete())
+                //开启订阅观察
+                .subscribe();
+        return sseEmitter;
+    }
+
+    /**
+     * 用户分为普通用户喝vip用户线程池的隔离起来（测试类接口）
+     *
+     * @param aiGenerateQuestionRequest
+     * @return
+     */
+    @GetMapping("/api_generate/sse/test")
+    public SseEmitter aiGenerateStreamQuestionTest(
+            AiGenerateQuestionRequest aiGenerateQuestionRequest, Boolean isVip) {
+        //判断请求参数是否为空
+        ThrowUtils.throwIf(aiGenerateQuestionRequest == null, ErrorCode.PARAMS_ERROR);
+        //获取请求参数中的appId
+        Long appId = aiGenerateQuestionRequest.getAppId();
+        //判断appId是否为0
+        ThrowUtils.throwIf(appId == 0
+                , ErrorCode.PARAMS_ERROR);
+        //根据appId获取App对象
+        App app = appService.getById(appId);
+        //判断App对象是否为空
+        ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR);
+
+        //开始根据题目生成用户的prompt
+        String userMessage = doGenerateQuestionUserMessage(app, aiGenerateQuestionRequest.getQuestionNumber(),
+                aiGenerateQuestionRequest.getOptionNumber());
+        //ai 生成流式返回
+        Flowable<ModelData> modelDataFlowable = aiManager
+                .doSyncStreamStableRequest(SYSTEM_MESSAGE, userMessage);
+        //设置为一直等待
+        SseEmitter sseEmitter = new SseEmitter(0L);
+        //完整的题目
+        StringBuffer stringBuffer = new StringBuffer();
+        // 左括号计数器，除了默认值外，当回归为0 时，表示左括号等于右括号，可以截取
+        AtomicInteger counter = new AtomicInteger();
+
+        Scheduler scheduler = Schedulers.io();
+        if (isVip) {
+            scheduler = vipSchedulerConfig.vipScheduler();
+        }
+        //需要将那些多余的空格排除
+        modelDataFlowable
+                //数据流订阅和调度，表示将后续的操作在IO 调度器上执行，适用于 I/O密集型任务
+                .observeOn(scheduler)
+                //数据映射与处理
+                //获取到流式的数据
+                .map(chunk -> chunk.getChoices().get(0).getDelta().getContent())
+                //将数据的 空格去掉
+                .map(message -> message.replaceAll("\\s", ""))
+                //判断每个字符是否为空
+                .filter(c -> StrUtil.isNotBlank(c))
+                //不为空的字符串，进行拼接成一个 Collection，便于后续的流式处理
+                .flatMap(message -> {
+                    //将字符串转换为 List<Character>，因为List是继承于 Iterable 的
+                    List<Character> charList = new ArrayList<>();
+                    for (char c : message.toCharArray()) {
+                        charList.add(c);
+                    }
+                    //这样才能通过 fromIterable 来订阅
+                    return Flowable.fromIterable(charList);
+                })
+                //数据流订阅后，进行的操作
+                .doOnNext(c -> {
+                    // 识别第一个 { 表示开始 AI 传输 json 数据，打开 flag 开始拼接 json 数据
+                    if (c == '{') {
+                        counter.addAndGet(1);
+                    }
+                    if (counter.get() > 0) {
+                        stringBuffer.append(c);
+                    }
+                    // 识别第一个 } 表示结束 AI 传输 json 数据
+                    if (c == '}') {
+                        counter.addAndGet(-1);
+                        if (counter.get() == 0) {
+                            //普通用户进行睡眠，看能否与vip 用户相互独立
+                            System.out.println(Thread.currentThread().getName());
+                            if (!isVip) {
+                                Thread.sleep(1000L);
+                            }
                             //积累单套题目满足 json 格式后，sse推动至前端
                             //sse 需要压缩成当行 json，sse 无法识别换行
                             sseEmitter.send(JSONUtil.toJsonStr(stringBuffer.toString()));

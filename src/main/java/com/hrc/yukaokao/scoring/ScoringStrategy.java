@@ -19,5 +19,5 @@ public interface ScoringStrategy {
      * 得分结果
      * @return
      */
-    UserAnswer doScore(List<String> choices, App app);
+    UserAnswer doScore(List<String> choices, App app) throws InterruptedException;
 }

@@ -1,5 +1,6 @@
 package com.hrc.yukaokao.controller;
 
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hrc.yukaokao.annotation.AuthCheck;
@@ -7,6 +8,7 @@ import com.hrc.yukaokao.common.BaseResponse;
 import com.hrc.yukaokao.common.DeleteRequest;
 import com.hrc.yukaokao.common.ErrorCode;
 import com.hrc.yukaokao.common.ResultUtils;
+import com.hrc.yukaokao.config.VipSchedulerConfig;
 import com.hrc.yukaokao.constant.UserConstant;
 import com.hrc.yukaokao.exception.BusinessException;
 import com.hrc.yukaokao.exception.ThrowUtils;
@@ -25,10 +27,12 @@ import com.hrc.yukaokao.service.UserAnswerService;
 import com.hrc.yukaokao.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 
 /**
@@ -82,14 +86,19 @@ public class UserAnswerController {
         User loginUser = userService.getLoginUser(request);
         userAnswer.setUserid(loginUser.getId());
         // 写入数据库
-        boolean result = userAnswerService.save(userAnswer);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        try {
+            boolean result = userAnswerService.save(userAnswer);
+            ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        } catch (DuplicateKeyException e) {
+            //ignore error
+        }
         // 返回新写入的数据 id
         long newUserAnswerId = userAnswer.getId();
         //调用评分模块
         try {
             UserAnswer userAnswerWithResult = scoringStrategyExecutor.doScore(choices, app);
             userAnswerWithResult.setId(newUserAnswerId);
+            userAnswerWithResult.setAppId(null);
             userAnswerService.updateById(userAnswerWithResult);
         } catch (Exception e) {
             e.printStackTrace();
@@ -266,4 +275,14 @@ public class UserAnswerController {
     }
 
     // endregion
+
+    /**
+     * 通过雪花算法，生成唯一id
+     *
+     * @return
+     */
+    @GetMapping("generate/id")
+    public BaseResponse<Long> generateUserAnswerId() {
+        return ResultUtils.success(IdUtil.getSnowflakeNextId());
+    }
 }

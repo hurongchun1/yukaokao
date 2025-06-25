@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.hrc.yukaokao.common.ErrorCode;
+import com.hrc.yukaokao.exception.BusinessException;
 import com.hrc.yukaokao.exception.ThrowUtils;
 import com.hrc.yukaokao.manager.AiManager;
 import com.hrc.yukaokao.model.dto.questionAnswer.QuestionAnswerDTO;
@@ -20,6 +21,7 @@ import com.hrc.yukaokao.model.enums.ApplyTypeEnum;
 import com.hrc.yukaokao.model.vo.QuestionVO;
 import com.hrc.yukaokao.service.QuestionService;
 import com.hrc.yukaokao.service.ScoringResultService;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.boot.autoconfigure.cache.CacheProperties;
@@ -41,6 +43,7 @@ import java.util.stream.Collectors;
  * @Version: 1.0.0
  */
 @ScoringStrategyConfig(applyType = 1,scoringStrategy = 1)
+@Slf4j
 public class AiTestScoringStrategy implements ScoringStrategy {
     @Resource
     private  QuestionService questionService;
@@ -108,11 +111,13 @@ public class AiTestScoringStrategy implements ScoringStrategy {
             userAnswer.setChoices(choicesStr);
             return userAnswer;
         }
-
+        //这是创建一把锁
         RLock lock = redissonClient.getLock(PREFIX_LOCK + appId);
         try{
-            if (!lock.isLocked()) {
-                return  null;
+            boolean res = lock.tryLock(3, 15, TimeUnit.SECONDS);
+            if (!res) {
+                //说明抢不到锁
+                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "测评失败");
             }
             //通过ai 写入userMessagePrompt 和 systemMessagePrompt
             String jsonUserAnswer = aiManager.doSyncStableRequest(SYSTEM_MESSAGE, userMessage);
@@ -130,6 +135,9 @@ public class AiTestScoringStrategy implements ScoringStrategy {
             userAnswer.setScoringStrategy(app.getScoringStrategy());
             userAnswer.setChoices(choicesStr);
             return userAnswer;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "测评失败");
         }finally {
             if(lock !=null && lock.isLocked() && lock.isHeldByCurrentThread()){
                 lock.unlock();
